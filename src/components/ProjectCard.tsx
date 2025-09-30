@@ -22,6 +22,7 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
   const [isTouchDevice, setIsTouchDevice] = useState(false)
   const [isFormatSupported, setIsFormatSupported] = useState(true)
   const [hasError, setHasError] = useState(false)
+  const [videoUrl, setVideoUrl] = useState<string | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
 
   // Detectar se é dispositivo touch
@@ -31,7 +32,7 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
     console.log('Touch device detectado:', isTouch)
   }, [])
 
-  // Detectar suporte ao formato de vídeo do navegador
+  // Detectar suporte ao formato de vídeo do navegador e definir src
   useEffect(() => {
     if (!project.video) return
     const videoEl = document.createElement('video')
@@ -43,15 +44,40 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
       supported = !!videoEl.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"') || !!videoEl.canPlayType('video/mp4')
     }
     setIsFormatSupported(!!supported)
+    setHasError(false)
+    if (supported) {
+      setVideoUrl(project.video)
+      if (videoRef.current) {
+        videoRef.current.src = project.video
+      }
+    } else {
+      setVideoUrl(null)
+    }
     console.log('Formato suportado?', supported, 'arquivo:', project.video)
   }, [project.video])
 
+  const tryPlay = () => {
+    if (!videoRef.current) return
+    // Mostrar animação de loading aqui se quiser
+    const playPromise = videoRef.current.play()
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          console.log('Reprodução iniciada')
+          setIsPlaying(true)
+        })
+        .catch((error) => {
+          console.log('Reprodução bloqueada/prevenida:', error)
+          setIsPlaying(false)
+        })
+    }
+  }
+
   const handleMouseEnter = () => {
     setIsHovered(true)
-    if (videoRef.current && project.video && isFormatSupported && !hasError) {
-      videoRef.current.play().catch(error => {
-        console.log('Erro ao reproduzir vídeo:', error)
-      })
+    if (videoRef.current && videoUrl && isFormatSupported && !hasError) {
+      videoRef.current.load()
+      tryPlay()
     }
   }
 
@@ -60,32 +86,39 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
     if (videoRef.current) {
       videoRef.current.pause()
       videoRef.current.currentTime = 0
+      setIsPlaying(false)
     }
   }
 
   const handleVideoClick = () => {
-    console.log('Clique detectado - isTouchDevice:', isTouchDevice, 'video:', project.video, 'isPlaying:', isPlaying)
-    if (!project.video || !videoRef.current || !isFormatSupported || hasError) return
+    console.log('Clique detectado - isTouchDevice:', isTouchDevice, 'video:', videoUrl, 'isPlaying:', isPlaying)
+    if (!videoUrl || !videoRef.current || !isFormatSupported || hasError) return
+    const el = videoRef.current
     if (isPlaying) {
       console.log('Pausando vídeo')
-      videoRef.current.pause()
-    } else {
-      console.log('Tentando reproduzir vídeo (muted primeiro)')
-      videoRef.current.muted = true
-      videoRef.current.play().then(() => {
-        console.log('Vídeo reproduzido (muted)')
-        setTimeout(() => {
-          if (videoRef.current) videoRef.current.muted = false
-        }, 100)
-      }).catch(error => {
-        console.log('Falha ao reproduzir (muted):', error)
-        if (videoRef.current) {
-          videoRef.current.muted = false
-          videoRef.current.play().catch(error2 => {
-            console.log('Falha ao reproduzir (unmuted):', error2)
-          })
-        }
-      })
+      el.pause()
+      setIsPlaying(false)
+      return
+    }
+    // Iniciar fluxo: load() garante que teremos token do gesto do usuário
+    el.muted = true
+    el.load()
+    const playPromise = el.play()
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          console.log('Reprodução iniciada (muted)')
+          // Após iniciar, tentar habilitar áudio
+          setTimeout(() => {
+            if (!videoRef.current) return
+            videoRef.current.muted = false
+          }, 100)
+          setIsPlaying(true)
+        })
+        .catch((error) => {
+          console.log('Falha ao iniciar reprodução:', error)
+          setIsPlaying(false)
+        })
     }
   }
 
@@ -144,38 +177,38 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
                   }`}>
                     <video
                       ref={videoRef}
-                      muted={true}
-                      loop
+                      // Definimos o src via JS para garantir rejeição correta da promise quando inválido
                       playsInline
-                      preload="auto"
+                      preload="none"
+                      muted
+                      loop
                       controls={false}
                       className="w-full h-full object-cover"
                       poster={project.image}
-                      onError={(e) => {
-                        console.log('Erro no vídeo:', project.video, e)
+                      onError={() => {
+                        console.log('Erro no vídeo (onError):', videoUrl)
                         setHasError(true)
+                        setIsPlaying(false)
                       }}
                       onCanPlay={() => {
-                        console.log('Vídeo pode ser reproduzido:', project.video)
+                        console.log('onCanPlay:', videoUrl)
                         setHasError(false)
                       }}
                       onLoadedData={() => {
-                        console.log('Dados do vídeo carregados:', project.video)
+                        console.log('onLoadedData:', videoUrl)
                       }}
                       onEnded={() => {
                         if (isTouchDevice) setIsPlaying(false)
                       }}
                       onPlay={() => {
-                        console.log('Vídeo começou a tocar')
+                        console.log('onPlay: iniciou')
                         setIsPlaying(true)
                       }}
                       onPause={() => {
-                        console.log('Vídeo pausado')
+                        console.log('onPause: pausou')
                         setIsPlaying(false)
                       }}
-                    >
-                      <source src={project.video} type={project.video.endsWith('.webm') ? 'video/webm' : 'video/mp4'} />
-                    </video>
+                    />
                   </div>
                 )}
               </>
