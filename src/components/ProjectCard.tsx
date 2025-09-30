@@ -20,6 +20,8 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isTouchDevice, setIsTouchDevice] = useState(false)
+  const [isFormatSupported, setIsFormatSupported] = useState(true)
+  const [hasError, setHasError] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
 
   // Detectar se é dispositivo touch
@@ -29,9 +31,24 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
     console.log('Touch device detectado:', isTouch)
   }, [])
 
+  // Detectar suporte ao formato de vídeo do navegador
+  useEffect(() => {
+    if (!project.video) return
+    const videoEl = document.createElement('video')
+    const isWebm = project.video.endsWith('.webm')
+    let supported = false
+    if (isWebm) {
+      supported = !!videoEl.canPlayType('video/webm; codecs="vp8, vorbis"') || !!videoEl.canPlayType('video/webm')
+    } else {
+      supported = !!videoEl.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"') || !!videoEl.canPlayType('video/mp4')
+    }
+    setIsFormatSupported(!!supported)
+    console.log('Formato suportado?', supported, 'arquivo:', project.video)
+  }, [project.video])
+
   const handleMouseEnter = () => {
     setIsHovered(true)
-    if (videoRef.current && project.video) {
+    if (videoRef.current && project.video && isFormatSupported && !hasError) {
       videoRef.current.play().catch(error => {
         console.log('Erro ao reproduzir vídeo:', error)
       })
@@ -47,34 +64,28 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
   }
 
   const handleVideoClick = () => {
-    console.log('Clique detectado - isTouchDevice:', isTouchDevice, 'project.video:', project.video, 'isPlaying:', isPlaying)
-    if (project.video && videoRef.current) {
-      if (isPlaying) {
-        console.log('Pausando vídeo')
-        videoRef.current.pause()
-      } else {
-        console.log('Tentando reproduzir vídeo')
-        // Tentar reproduzir muted primeiro (mais compatível com mobile)
-        videoRef.current.muted = true
-        videoRef.current.play().then(() => {
-          console.log('Vídeo reproduzido com sucesso (muted)')
-          // Depois de começar a tocar, tentar habilitar áudio
-          setTimeout(() => {
-            if (videoRef.current) {
-              videoRef.current.muted = false
-            }
-          }, 100)
-        }).catch(error => {
-          console.log('Erro ao reproduzir vídeo (muted):', error)
-          // Se falhar muted, tentar sem muted
-          if (videoRef.current) {
-            videoRef.current.muted = false
-            videoRef.current.play().catch(error2 => {
-              console.log('Erro ao reproduzir vídeo (unmuted):', error2)
-            })
-          }
-        })
-      }
+    console.log('Clique detectado - isTouchDevice:', isTouchDevice, 'video:', project.video, 'isPlaying:', isPlaying)
+    if (!project.video || !videoRef.current || !isFormatSupported || hasError) return
+    if (isPlaying) {
+      console.log('Pausando vídeo')
+      videoRef.current.pause()
+    } else {
+      console.log('Tentando reproduzir vídeo (muted primeiro)')
+      videoRef.current.muted = true
+      videoRef.current.play().then(() => {
+        console.log('Vídeo reproduzido (muted)')
+        setTimeout(() => {
+          if (videoRef.current) videoRef.current.muted = false
+        }, 100)
+      }).catch(error => {
+        console.log('Falha ao reproduzir (muted):', error)
+        if (videoRef.current) {
+          videoRef.current.muted = false
+          videoRef.current.play().catch(error2 => {
+            console.log('Falha ao reproduzir (unmuted):', error2)
+          })
+        }
+      })
     }
   }
 
@@ -102,9 +113,8 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
                     isTouchDevice ? (isPlaying ? 'opacity-0' : 'opacity-100') : (isHovered ? 'opacity-0' : 'opacity-100')
                   }`}
                   onClick={handleVideoClick}
-                  onTouchStart={(e) => {
+                  onTouchStart={() => {
                     console.log('TouchStart detectado')
-                    e.preventDefault()
                     handleVideoClick()
                   }}
                 >
@@ -113,71 +123,61 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
                     alt={project.title}
                     className="w-full h-full object-cover"
                   />
-                  {/* Play button - sempre visível em dispositivos touch */}
-                  <div className={`absolute inset-0 flex items-center justify-center ${
-                    isTouchDevice && !isPlaying ? 'opacity-100' : 'opacity-0'
-                  } transition-opacity duration-300`}>
-                    <div className="bg-black/60 rounded-full p-4 hover:bg-black/70 transition-colors">
-                      <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M8 5v14l11-7z"/>
-                      </svg>
+                  {/* Play button - mostrar apenas se formato suportado e sem erro */}
+                  {(isFormatSupported && !hasError) && (
+                    <div className={`absolute inset-0 flex items-center justify-center ${
+                      isTouchDevice && !isPlaying ? 'opacity-100' : 'opacity-0'
+                    } transition-opacity duration-300`}>
+                      <div className="bg-black/60 rounded-full p-4 hover:bg-black/70 transition-colors">
+                        <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M8 5v14l11-7z"/>
+                        </svg>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
                 
-                {/* Video */}
-                <div className={`absolute inset-0 transition-opacity duration-300 ${
-                  isTouchDevice ? (isPlaying ? 'opacity-100' : 'opacity-0') : (isHovered ? 'opacity-100' : 'opacity-0')
-                }`}>
-                  <video
-                    ref={videoRef}
-                    muted={true}
-                    loop
-                    playsInline
-                    preload="auto"
-                    controls={false}
-                    className="w-full h-full object-cover"
-                    poster={project.image}
-                    onError={(e) => {
-                      console.log('Erro no vídeo:', project.video, e)
-                      console.log('Evento de erro:', e)
-                    }}
-                    onLoadStart={() => {
-                      console.log('Carregando vídeo:', project.video)
-                    }}
-                    onCanPlay={() => {
-                      console.log('Vídeo pode ser reproduzido:', project.video)
-                    }}
-                    onLoadedData={() => {
-                      console.log('Dados do vídeo carregados:', project.video)
-                    }}
-                    onEnded={() => {
-                      if (isTouchDevice) {
+                {/* Video - renderizar somente quando suportado e sem erro */}
+                {(isFormatSupported && !hasError) && (
+                  <div className={`absolute inset-0 transition-opacity duration-300 ${
+                    isTouchDevice ? (isPlaying ? 'opacity-100' : 'opacity-0') : (isHovered ? 'opacity-100' : 'opacity-0')
+                  }`}>
+                    <video
+                      ref={videoRef}
+                      muted={true}
+                      loop
+                      playsInline
+                      preload="auto"
+                      controls={false}
+                      className="w-full h-full object-cover"
+                      poster={project.image}
+                      onError={(e) => {
+                        console.log('Erro no vídeo:', project.video, e)
+                        setHasError(true)
+                      }}
+                      onCanPlay={() => {
+                        console.log('Vídeo pode ser reproduzido:', project.video)
+                        setHasError(false)
+                      }}
+                      onLoadedData={() => {
+                        console.log('Dados do vídeo carregados:', project.video)
+                      }}
+                      onEnded={() => {
+                        if (isTouchDevice) setIsPlaying(false)
+                      }}
+                      onPlay={() => {
+                        console.log('Vídeo começou a tocar')
+                        setIsPlaying(true)
+                      }}
+                      onPause={() => {
+                        console.log('Vídeo pausado')
                         setIsPlaying(false)
-                      }
-                    }}
-                    onPlay={() => {
-                      console.log('Vídeo começou a tocar')
-                      setIsPlaying(true)
-                    }}
-                    onPause={() => {
-                      console.log('Vídeo pausado')
-                      setIsPlaying(false)
-                    }}
-                  >
-                    <source src={project.video} type={project.video.endsWith('.webm') ? 'video/webm' : 'video/mp4'} />
-                    <source src={project.video.replace('.webm', '.mp4').replace('.mp4', '.webm')} type={project.video.endsWith('.webm') ? 'video/mp4' : 'video/webm'} />
-                    Seu navegador não suporta vídeos.
-                  </video>
-                  
-                  {/* Fallback se vídeo não carregar */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                    <div className="text-center text-gray-600">
-                      <div className="text-2xl mb-2">🎬</div>
-                      <div className="text-sm">Vídeo não disponível</div>
-                    </div>
+                      }}
+                    >
+                      <source src={project.video} type={project.video.endsWith('.webm') ? 'video/webm' : 'video/mp4'} />
+                    </video>
                   </div>
-                </div>
+                )}
               </>
             ) : (
               /* Image only */
