@@ -110,38 +110,56 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
                 </div>
                 
                 {/* Video */}
-                <video
-                  ref={videoRef}
-                  muted={false}
-                  loop
-                  playsInline
-                  preload="metadata"
-                  className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
-                    isTouchDevice ? (isPlaying ? 'opacity-100' : 'opacity-0') : (isHovered ? 'opacity-100' : 'opacity-0')
-                  }`}
-                  poster={project.image}
-                  onError={(e) => {
-                    console.log('Erro no vídeo:', project.video, e)
-                  }}
-                  onLoadStart={() => {
-                    console.log('Carregando vídeo:', project.video)
-                  }}
-                  onEnded={() => {
-                    if (isTouchDevice) {
+                <div className={`absolute inset-0 transition-opacity duration-300 ${
+                  isTouchDevice ? (isPlaying ? 'opacity-100' : 'opacity-0') : (isHovered ? 'opacity-100' : 'opacity-0')
+                }`}>
+                  <video
+                    ref={videoRef}
+                    muted={false}
+                    loop
+                    playsInline
+                    preload="metadata"
+                    className="w-full h-full object-cover"
+                    poster={project.image}
+                    onError={(e) => {
+                      console.log('Erro no vídeo:', project.video, e)
+                      console.log('Evento de erro:', e)
+                    }}
+                    onLoadStart={() => {
+                      console.log('Carregando vídeo:', project.video)
+                    }}
+                    onCanPlay={() => {
+                      console.log('Vídeo pode ser reproduzido:', project.video)
+                    }}
+                    onLoadedData={() => {
+                      console.log('Dados do vídeo carregados:', project.video)
+                    }}
+                    onEnded={() => {
+                      if (isTouchDevice) {
+                        setIsPlaying(false)
+                      }
+                    }}
+                    onPlay={() => {
+                      console.log('Vídeo começou a tocar')
+                      setIsPlaying(true)
+                    }}
+                    onPause={() => {
+                      console.log('Vídeo pausado')
                       setIsPlaying(false)
-                    }
-                  }}
-                  onPlay={() => {
-                    console.log('Vídeo começou a tocar')
-                    setIsPlaying(true)
-                  }}
-                  onPause={() => {
-                    console.log('Vídeo pausado')
-                    setIsPlaying(false)
-                  }}
-                >
-                  <source src={project.video} type={project.video.endsWith('.webm') ? 'video/webm' : 'video/mp4'} />
-                </video>
+                    }}
+                  >
+                    <source src={project.video} type={project.video.endsWith('.webm') ? 'video/webm' : 'video/mp4'} />
+                    Seu navegador não suporta vídeos.
+                  </video>
+                  
+                  {/* Fallback se vídeo não carregar */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                    <div className="text-center text-gray-600">
+                      <div className="text-2xl mb-2">🎬</div>
+                      <div className="text-sm">Vídeo não disponível</div>
+                    </div>
+                  </div>
+                </div>
               </>
             ) : (
               /* Image only */
