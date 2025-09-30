@@ -25,7 +25,10 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
   // Detectar se é mobile
   useEffect(() => {
     const checkIsMobile = () => {
-      setIsMobile(window.innerWidth < 768 || 'ontouchstart' in window)
+      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+      const isSmallScreen = window.innerWidth < 768
+      setIsMobile(isTouch || isSmallScreen)
+      console.log('Mobile detectado:', isTouch || isSmallScreen, 'Touch:', isTouch, 'Small screen:', isSmallScreen)
     }
     
     checkIsMobile()
@@ -52,14 +55,18 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
   }
 
   const handleVideoClick = () => {
-    if (isMobile && project.video) {
+    console.log('Clique detectado - isMobile:', isMobile, 'project.video:', project.video, 'isPlaying:', isPlaying)
+    if (project.video && videoRef.current) {
       if (isPlaying) {
-        videoRef.current?.pause()
-        setIsPlaying(false)
+        console.log('Pausando vídeo')
+        videoRef.current.pause()
       } else {
-        videoRef.current?.play().then(() => {
-          setIsPlaying(true)
-        }).catch(error => {
+        console.log('Tentando reproduzir vídeo')
+        // No mobile, permitir áudio
+        if (isMobile) {
+          videoRef.current.muted = false
+        }
+        videoRef.current.play().catch(error => {
           console.log('Erro ao reproduzir vídeo:', error)
         })
       }
@@ -86,7 +93,7 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
               <>
                 {/* Cover Image with Video */}
                 <div 
-                  className={`aspect-[4/3] sm:aspect-[3/2] bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center transition-opacity duration-300 cursor-pointer ${
+                  className={`aspect-[4/3] sm:aspect-[3/2] bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center transition-opacity duration-300 cursor-pointer relative ${
                     isMobile ? (isPlaying ? 'opacity-0' : 'opacity-100') : (isHovered ? 'opacity-0' : 'opacity-100')
                   }`}
                   onClick={handleVideoClick}
@@ -96,24 +103,25 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
                     alt={project.title}
                     className="w-full h-full object-cover"
                   />
-                  {/* Play button for mobile */}
-                  {isMobile && !isPlaying && (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="bg-black/50 rounded-full p-4">
-                        <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M8 5v14l11-7z"/>
-                        </svg>
-                      </div>
+                  {/* Play button - sempre visível em telas pequenas */}
+                  <div className={`absolute inset-0 flex items-center justify-center ${
+                    isMobile && !isPlaying ? 'opacity-100' : 'opacity-0'
+                  } transition-opacity duration-300`}>
+                    <div className="bg-black/60 rounded-full p-4 hover:bg-black/70 transition-colors">
+                      <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
                     </div>
-                  )}
+                  </div>
                 </div>
                 
                 {/* Video */}
                 <video
                   ref={videoRef}
-                  muted
+                  muted={!isMobile}
                   loop
                   playsInline
+                  preload="metadata"
                   className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
                     isMobile ? (isPlaying ? 'opacity-100' : 'opacity-0') : (isHovered ? 'opacity-100' : 'opacity-0')
                   }`}
@@ -128,6 +136,14 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
                     if (isMobile) {
                       setIsPlaying(false)
                     }
+                  }}
+                  onPlay={() => {
+                    console.log('Vídeo começou a tocar')
+                    setIsPlaying(true)
+                  }}
+                  onPause={() => {
+                    console.log('Vídeo pausado')
+                    setIsPlaying(false)
                   }}
                 >
                   <source src={project.video} type={project.video.endsWith('.webm') ? 'video/webm' : 'video/mp4'} />
