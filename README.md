@@ -1,36 +1,99 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Boldway Clone
 
-## Getting Started
+Uma réplica completa do site da [Boldway](https://boldway.com.br/) construída com Next.js, TypeScript, Tailwind CSS e Framer Motion.
 
-First, run the development server:
+## 🚀 Tecnologias Utilizadas
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Next.js 15** - Framework React
+- **TypeScript** - Tipagem estática
+- **Tailwind CSS** - Estilização
+- **Framer Motion** - Animações
+- **Lucide React** - Ícones
+
+## 📋 Funcionalidades
+
+- ✅ Design responsivo para mobile e desktop
+- ✅ Animações suaves com Framer Motion
+- ✅ Navegação fixa com menu mobile
+- ✅ Seções completas:
+  - Hero com animações de texto
+  - Projetos/Cases em grid
+  - Serviços organizados
+  - Depoimentos de clientes
+  - Call-to-action com formulário
+  - Seção lifestyle
+  - Footer completo
+
+## 🛠️ Como executar
+
+1. **Instalar dependências:**
+   ```bash
+   npm install
+   ```
+
+2. **Executar em modo desenvolvimento:**
+   ```bash
+   npm run dev
+   ```
+
+3. **Abrir no navegador:**
+   ```
+   http://localhost:3000
+   ```
+
+## 📁 Estrutura do Projeto
+
+```
+src/
+├── app/
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+├── components/
+│   ├── Header.tsx
+│   ├── Footer.tsx
+│   ├── HeroSection.tsx
+│   ├── ProjectsSection.tsx
+│   ├── ServicesSection.tsx
+│   ├── TestimonialsSection.tsx
+│   ├── CTASection.tsx
+│   └── LifestyleSection.tsx
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🎨 Design System
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Cores principais:** Preto (#000) e Branco (#fff)
+- **Tipografia:** Inter (Google Fonts)
+- **Animações:** Framer Motion com transições suaves
+- **Layout:** Grid responsivo com Tailwind CSS
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📱 Responsividade
 
-## Learn More
+O site foi desenvolvido com foco em mobile-first, seguindo as melhores práticas de design responsivo:
 
-To learn more about Next.js, take a look at the following resources:
+- Breakpoints: sm (640px), md (768px), lg (1024px), xl (1280px)
+- Navegação adaptável (menu hambúrguer em mobile)
+- Textos e espaçamentos otimizados para cada tamanho de tela
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🚀 Deploy
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Para fazer deploy em produção:
 
-## Deploy on Vercel
+```bash
+npm run build
+npm start
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Ou use plataformas como Vercel, Netlify ou Railway para deploy automático.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📝 Próximos Passos
+
+- [ ] Adicionar mais projetos ao portfólio
+- [ ] Implementar formulário de contato funcional
+- [ ] Adicionar mais animações interativas
+- [ ] Otimizar imagens e performance
+- [ ] Adicionar testes unitários
+
+---
+
+**Desenvolvido com ❤️ usando as melhores práticas de desenvolvimento web moderno.**

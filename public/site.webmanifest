@@ -1,0 +1,22 @@
+{
+    "name": "Shiftway",
+    "short_name": "Shiftway",
+    "icons": [
+      {
+        "src": "/logo-doshift.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      },
+      {
+        "src": "/logo-doshift.png", 
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ],
+    "theme_color": "#000000",
+    "background_color": "#ffffff",
+    "display": "standalone"
+
+
+  
+  }
