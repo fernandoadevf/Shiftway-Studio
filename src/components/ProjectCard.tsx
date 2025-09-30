@@ -2,7 +2,6 @@
 
 import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
-import Image from 'next/image'
 
 interface ProjectCardProps {
   project: {
@@ -23,8 +22,10 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
 
   const handleMouseEnter = () => {
     setIsHovered(true)
-    if (videoRef.current) {
-      videoRef.current.play()
+    if (videoRef.current && project.video) {
+      videoRef.current.play().catch(error => {
+        console.log('Erro ao reproduzir vídeo:', error)
+      })
     }
   }
 
@@ -56,11 +57,10 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
               <>
                 {/* Cover Image with Video */}
                 <div className={`aspect-[4/3] sm:aspect-[3/2] bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center transition-opacity duration-300 ${isHovered ? 'opacity-0' : 'opacity-100'}`}>
-                  <Image 
+                  <img 
                     src={project.image} 
                     alt={project.title}
-                    fill
-                    className="object-cover"
+                    className="w-full h-full object-cover"
                   />
                 </div>
                 
@@ -72,18 +72,23 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
                   playsInline
                   className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${isHovered ? 'opacity-100' : 'opacity-0'}`}
                   poster={project.image}
+                  onError={(e) => {
+                    console.log('Erro no vídeo:', project.video, e)
+                  }}
+                  onLoadStart={() => {
+                    console.log('Carregando vídeo:', project.video)
+                  }}
                 >
                   <source src={project.video} type={project.video.endsWith('.webm') ? 'video/webm' : 'video/mp4'} />
                 </video>
               </>
             ) : (
               /* Image only */
-              <div className="aspect-[4/3] sm:aspect-[3/2] bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center relative">
-                <Image 
+              <div className="aspect-[4/3] sm:aspect-[3/2] bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
+                <img 
                   src={project.image} 
                   alt={project.title}
-                  fill
-                  className="object-cover"
+                  className="w-full h-full object-cover"
                 />
               </div>
             )
