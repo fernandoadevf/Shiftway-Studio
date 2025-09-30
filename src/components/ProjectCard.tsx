@@ -54,9 +54,25 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
         videoRef.current.pause()
       } else {
         console.log('Tentando reproduzir vídeo')
-        videoRef.current.muted = false // Sempre permitir áudio
-        videoRef.current.play().catch(error => {
-          console.log('Erro ao reproduzir vídeo:', error)
+        // Tentar reproduzir muted primeiro (mais compatível com mobile)
+        videoRef.current.muted = true
+        videoRef.current.play().then(() => {
+          console.log('Vídeo reproduzido com sucesso (muted)')
+          // Depois de começar a tocar, tentar habilitar áudio
+          setTimeout(() => {
+            if (videoRef.current) {
+              videoRef.current.muted = false
+            }
+          }, 100)
+        }).catch(error => {
+          console.log('Erro ao reproduzir vídeo (muted):', error)
+          // Se falhar muted, tentar sem muted
+          if (videoRef.current) {
+            videoRef.current.muted = false
+            videoRef.current.play().catch(error2 => {
+              console.log('Erro ao reproduzir vídeo (unmuted):', error2)
+            })
+          }
         })
       }
     }
@@ -115,10 +131,11 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
                 }`}>
                   <video
                     ref={videoRef}
-                    muted={false}
+                    muted={true}
                     loop
                     playsInline
-                    preload="metadata"
+                    preload="auto"
+                    controls={false}
                     className="w-full h-full object-cover"
                     poster={project.image}
                     onError={(e) => {
@@ -149,6 +166,7 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
                     }}
                   >
                     <source src={project.video} type={project.video.endsWith('.webm') ? 'video/webm' : 'video/mp4'} />
+                    <source src={project.video.replace('.webm', '.mp4').replace('.mp4', '.webm')} type={project.video.endsWith('.webm') ? 'video/mp4' : 'video/webm'} />
                     Seu navegador não suporta vídeos.
                   </video>
                   
