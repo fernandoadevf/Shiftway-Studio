@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { motion } from 'framer-motion'
-import { useLanguage } from '@/contexts/LanguageContext'
+import Image from 'next/image'
 
 interface ProjectCardProps {
   project: {
@@ -20,7 +20,6 @@ interface ProjectCardProps {
 export default function ProjectCard({ project, index }: ProjectCardProps) {
   const [isHovered, setIsHovered] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
-  const { t } = useLanguage()
 
   const handleMouseEnter = () => {
     setIsHovered(true)
@@ -57,10 +56,11 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
               <>
                 {/* Cover Image with Video */}
                 <div className={`aspect-[4/3] sm:aspect-[3/2] bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center transition-opacity duration-300 ${isHovered ? 'opacity-0' : 'opacity-100'}`}>
-                  <img 
+                  <Image 
                     src={project.image} 
                     alt={project.title}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
                   />
                 </div>
                 
@@ -78,11 +78,12 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
               </>
             ) : (
               /* Image only */
-              <div className="aspect-[4/3] sm:aspect-[3/2] bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">
-                <img 
+              <div className="aspect-[4/3] sm:aspect-[3/2] bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center relative">
+                <Image 
                   src={project.image} 
                   alt={project.title}
-                  className="w-full h-full object-cover"
+                  fill
+                  className="object-cover"
                 />
               </div>
             )
