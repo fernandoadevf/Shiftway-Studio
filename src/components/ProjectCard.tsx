@@ -18,23 +18,15 @@ interface ProjectCardProps {
 
 export default function ProjectCard({ project, index }: ProjectCardProps) {
   const [isHovered, setIsHovered] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [isTouchDevice, setIsTouchDevice] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
 
-  // Detectar se é mobile
+  // Detectar se é dispositivo touch
   useEffect(() => {
-    const checkIsMobile = () => {
-      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
-      const isSmallScreen = window.innerWidth < 768
-      setIsMobile(isTouch || isSmallScreen)
-      console.log('Mobile detectado:', isTouch || isSmallScreen, 'Touch:', isTouch, 'Small screen:', isSmallScreen)
-    }
-    
-    checkIsMobile()
-    window.addEventListener('resize', checkIsMobile)
-    
-    return () => window.removeEventListener('resize', checkIsMobile)
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+    setIsTouchDevice(isTouch)
+    console.log('Touch device detectado:', isTouch)
   }, [])
 
   const handleMouseEnter = () => {
@@ -55,17 +47,14 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
   }
 
   const handleVideoClick = () => {
-    console.log('Clique detectado - isMobile:', isMobile, 'project.video:', project.video, 'isPlaying:', isPlaying)
+    console.log('Clique detectado - isTouchDevice:', isTouchDevice, 'project.video:', project.video, 'isPlaying:', isPlaying)
     if (project.video && videoRef.current) {
       if (isPlaying) {
         console.log('Pausando vídeo')
         videoRef.current.pause()
       } else {
         console.log('Tentando reproduzir vídeo')
-        // No mobile, permitir áudio
-        if (isMobile) {
-          videoRef.current.muted = false
-        }
+        videoRef.current.muted = false // Sempre permitir áudio
         videoRef.current.play().catch(error => {
           console.log('Erro ao reproduzir vídeo:', error)
         })
@@ -94,18 +83,23 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
                 {/* Cover Image with Video */}
                 <div 
                   className={`aspect-[4/3] sm:aspect-[3/2] bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center transition-opacity duration-300 cursor-pointer relative ${
-                    isMobile ? (isPlaying ? 'opacity-0' : 'opacity-100') : (isHovered ? 'opacity-0' : 'opacity-100')
+                    isTouchDevice ? (isPlaying ? 'opacity-0' : 'opacity-100') : (isHovered ? 'opacity-0' : 'opacity-100')
                   }`}
                   onClick={handleVideoClick}
+                  onTouchStart={(e) => {
+                    console.log('TouchStart detectado')
+                    e.preventDefault()
+                    handleVideoClick()
+                  }}
                 >
                   <img 
                     src={project.image} 
                     alt={project.title}
                     className="w-full h-full object-cover"
                   />
-                  {/* Play button - sempre visível em telas pequenas */}
+                  {/* Play button - sempre visível em dispositivos touch */}
                   <div className={`absolute inset-0 flex items-center justify-center ${
-                    isMobile && !isPlaying ? 'opacity-100' : 'opacity-0'
+                    isTouchDevice && !isPlaying ? 'opacity-100' : 'opacity-0'
                   } transition-opacity duration-300`}>
                     <div className="bg-black/60 rounded-full p-4 hover:bg-black/70 transition-colors">
                       <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
@@ -118,12 +112,12 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
                 {/* Video */}
                 <video
                   ref={videoRef}
-                  muted={!isMobile}
+                  muted={false}
                   loop
                   playsInline
                   preload="metadata"
                   className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ${
-                    isMobile ? (isPlaying ? 'opacity-100' : 'opacity-0') : (isHovered ? 'opacity-100' : 'opacity-0')
+                    isTouchDevice ? (isPlaying ? 'opacity-100' : 'opacity-0') : (isHovered ? 'opacity-100' : 'opacity-0')
                   }`}
                   poster={project.image}
                   onError={(e) => {
@@ -133,7 +127,7 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
                     console.log('Carregando vídeo:', project.video)
                   }}
                   onEnded={() => {
-                    if (isMobile) {
+                    if (isTouchDevice) {
                       setIsPlaying(false)
                     }
                   }}
