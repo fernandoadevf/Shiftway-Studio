@@ -143,7 +143,9 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
                 {/* Cover Image with Video */}
                 <div 
                   className={`aspect-[4/3] sm:aspect-[3/2] bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center transition-opacity duration-300 cursor-pointer relative ${
-                    isTouchDevice ? (isPlaying ? 'opacity-0' : 'opacity-100') : (isHovered ? 'opacity-0' : 'opacity-100')
+                    isTouchDevice
+                      ? (isPlaying ? 'opacity-0 pointer-events-none' : 'opacity-100')
+                      : (isHovered ? 'opacity-0 pointer-events-none' : 'opacity-100')
                   }`}
                   onClick={handleVideoClick}
                   onTouchStart={() => {
@@ -173,7 +175,9 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
                 {/* Video - renderizar somente quando suportado e sem erro */}
                 {(isFormatSupported && !hasError) && (
                   <div className={`absolute inset-0 transition-opacity duration-300 ${
-                    isTouchDevice ? (isPlaying ? 'opacity-100' : 'opacity-0') : (isHovered ? 'opacity-100' : 'opacity-0')
+                    isTouchDevice
+                      ? (isPlaying ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none')
+                      : (isHovered ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none')
                   }`}>
                     <video
                       ref={videoRef}
